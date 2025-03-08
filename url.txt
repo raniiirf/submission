@@ -1,1 +1,2 @@
 github: https://bookish-space-capybara-4jvvj96rrpjjcjp5p-8501.app.github.dev/ 
+streamlit : https://dashboard-proyek-akhir-dicoding.streamlit.app/ 
