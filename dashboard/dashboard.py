@@ -2,6 +2,17 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+
+# Pastikan path file sesuai posisi relatif di proyek
+file_path = os.path.join(os.path.dirname(__file__), "all_data.csv")
+
+# Baca CSV
+if os.path.exists(file_path):
+    all_data = pd.read_csv(file_path)
+    print("File loaded successfully!")
+else:
+    print(f"File not found at {file_path}")
 
 # Load Data
 @st.cache_data
