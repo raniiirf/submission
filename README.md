@@ -14,10 +14,12 @@ Ensure all data files and scripts are in **one folder** for easy access. The fol
 ## Running the Dashboard
 To start the Streamlit app, use this command:
 
-1. Install the requirements
+1. setup environment (Terminal)
 
 ```bash
-   $ pip install -r requirements.txt
+$ python3 -m pip install --upgrade pip
+$ pip install -r requirements.txt
+$ cd dashboard
 ```
 
 2. Run the app

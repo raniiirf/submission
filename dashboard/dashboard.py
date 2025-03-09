@@ -36,29 +36,15 @@ if not data.empty:
         max_value=max_date
     )
 
-    # Pastikan format tanggal valid
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
-    # Filter data berdasarkan tanggal
     data_filtered = data[(data['order_date'] >= start_date) & (data['order_date'] <= end_date)]
 
     if data_filtered.empty:
         st.warning("No data available for the selected date range.")
 else:
     st.stop()
-
-# Filter lokasi geografis (Customer States)
-states = data_filtered['customer_state'].unique().tolist()
-selected_states = st.sidebar.multiselect("Select States:", states, default=states)
-
-data_filtered = data_filtered[data_filtered['customer_state'].isin(selected_states)]
-
-# Filter kategori produk
-categories = data_filtered['product_category_name_english'].dropna().unique().tolist()
-selected_categories = st.sidebar.multiselect("Select Product Categories:", categories, default=categories)
-
-data_filtered = data_filtered[data_filtered['product_category_name_english'].isin(selected_categories)]
 
 # Helper Functions
 def create_daily_orders_df(df):
@@ -71,12 +57,6 @@ def create_daily_orders_df(df):
 
 def create_sum_order_items_df(df):
     return df.groupby("product_category_name_english").size().reset_index(name='quantity').sort_values(by='quantity', ascending=False)
-
-def create_sales_by_state_df(df):
-    return df.groupby("customer_state").agg({
-        "order_id": "nunique",
-        "price": "sum"
-    }).reset_index().rename(columns={"order_id": "order_count", "price": "revenue"})
 
 # Tabs
 st.title("E-commerce Public Brazil Dashboard :sparkles:")
@@ -104,6 +84,14 @@ with tab1:
     ax.set_title("Monthly Sales Performance")
     st.pyplot(fig)
 
+    # Top Cities
+    st.subheader("Top 10 Cities with Highest Number of Orders")
+    city_orders = data_filtered.groupby('customer_city')['order_id'].count().sort_values(ascending=False).head(10)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.barplot(x=city_orders.values, y=city_orders.index, palette='Blues_r', ax=ax)
+    ax.set_title("Top 10 Cities with Highest Number of Orders")
+    st.pyplot(fig)
+
 # Top Products Tab
 with tab2:
     st.header("Top Products")
@@ -124,16 +112,23 @@ with tab2:
         ax.set_title("Bottom 10 Product Categories")
         st.pyplot(fig)
 
+    # Product Sales Trends Over Time
+    st.subheader("Product Category Sales Trends Over Time")
+    category_trends = data_filtered.groupby(['order_date_month', 'product_category_name_english']).size().unstack().fillna(0)
+    fig, ax = plt.subplots(figsize=(12, 8))
+    for category in category_trends.columns[:10]:
+        ax.plot(category_trends.index.astype(str), category_trends[category], label=category)
+    ax.set_title('Product Category Sales Trends Over Time')
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Number of Sales')
+    ax.legend()
+    ax.grid(True)
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
+
 # Customer Insights Tab
 with tab3:
     st.header("Customer Insights")
-    sales_by_state = create_sales_by_state_df(data_filtered)
-
-    fig, ax = plt.subplots()
-    sns.barplot(x=sales_by_state['revenue'], y=sales_by_state['customer_state'], palette='Blues_r', ax=ax)
-    ax.set_title("Sales by State")
-    st.pyplot(fig)
-
     state_counts = data_filtered['customer_state'].value_counts().head(10)
     fig, ax = plt.subplots()
     sns.barplot(x=state_counts.values, y=state_counts.index, palette='magma', ax=ax)
