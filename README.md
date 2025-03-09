@@ -10,6 +10,7 @@ Ensure all data files and scripts are in **one folder** for easy access. The fol
 - `dashboard.py` — The Streamlit dashboard script.
 - `requirements.txt` — The list of required libraries.
 
+
 ## Running the Dashboard
 To start the Streamlit app, use this command:
 
@@ -22,7 +23,7 @@ To start the Streamlit app, use this command:
 2. Run the app
 
 ```bash
-   $ streamlit run streamlit_app.py
+   $ streamlit run dashboard.py
 ```
 
 Happy analyzing! 🚀
