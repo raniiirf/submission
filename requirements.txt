@@ -2,3 +2,4 @@ pandas==2.2.0
 matplotlib==3.10.0
 seaborn==0.13.2
 streamlit==1.43.1
+datetime==1.43.1
