@@ -95,18 +95,37 @@ with tab1:
 # Top Products Tab
 with tab2:
     st.header("Top Products")
-    sum_order_items = create_sum_order_items_df(data_filtered)
+
+    # Select Category Filter
+    selected_category = st.selectbox(
+        "Select Product Category",
+        options=data_filtered['product_category_name_english'].unique(),
+        index=0
+    )
+
+    # Filter data berdasarkan kategori yang dipilih
+    filtered_data = data_filtered[data_filtered['product_category_name_english'] == selected_category]
+
+    # Update visualisasi Top Products
+    st.subheader(f"Sales Data for {selected_category}")
+
+    category_sales = filtered_data.groupby('order_date_month')['order_id'].count().reset_index()
+    fig, ax = plt.subplots()
+    sns.lineplot(x='order_date_month', y='order_id', data=category_sales, marker='o', ax=ax)
+    ax.set_title(f"Sales Trend for {selected_category}")
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
 
     col1, col2 = st.columns(2)
     with col1:
-        top_products = sum_order_items.head(10)
+        top_products = create_sum_order_items_df(data_filtered).head(10)
         fig, ax = plt.subplots()
         sns.barplot(x=top_products['quantity'], y=top_products['product_category_name_english'], palette='Greens_r', ax=ax)
         ax.set_title("Top 10 Product Categories")
         st.pyplot(fig)
 
     with col2:
-        least_products = sum_order_items.tail(10)
+        least_products = create_sum_order_items_df(data_filtered).tail(10)
         fig, ax = plt.subplots()
         sns.barplot(x=least_products['quantity'], y=least_products['product_category_name_english'], palette='Reds_r', ax=ax)
         ax.set_title("Bottom 10 Product Categories")
