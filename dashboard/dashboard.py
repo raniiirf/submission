@@ -48,6 +48,18 @@ if not data.empty:
 else:
     st.stop()
 
+# Filter lokasi geografis (Customer States)
+states = data_filtered['customer_state'].unique().tolist()
+selected_states = st.sidebar.multiselect("Select States:", states, default=states)
+
+data_filtered = data_filtered[data_filtered['customer_state'].isin(selected_states)]
+
+# Filter kategori produk
+categories = data_filtered['product_category_name_english'].dropna().unique().tolist()
+selected_categories = st.sidebar.multiselect("Select Product Categories:", categories, default=categories)
+
+data_filtered = data_filtered[data_filtered['product_category_name_english'].isin(selected_categories)]
+
 # Helper Functions
 def create_daily_orders_df(df):
     daily_orders_df = df.resample('D', on='order_date').agg({
@@ -59,6 +71,12 @@ def create_daily_orders_df(df):
 
 def create_sum_order_items_df(df):
     return df.groupby("product_category_name_english").size().reset_index(name='quantity').sort_values(by='quantity', ascending=False)
+
+def create_sales_by_state_df(df):
+    return df.groupby("customer_state").agg({
+        "order_id": "nunique",
+        "price": "sum"
+    }).reset_index().rename(columns={"order_id": "order_count", "price": "revenue"})
 
 # Tabs
 st.title("E-commerce Public Brazil Dashboard :sparkles:")
@@ -109,6 +127,13 @@ with tab2:
 # Customer Insights Tab
 with tab3:
     st.header("Customer Insights")
+    sales_by_state = create_sales_by_state_df(data_filtered)
+
+    fig, ax = plt.subplots()
+    sns.barplot(x=sales_by_state['revenue'], y=sales_by_state['customer_state'], palette='Blues_r', ax=ax)
+    ax.set_title("Sales by State")
+    st.pyplot(fig)
+
     state_counts = data_filtered['customer_state'].value_counts().head(10)
     fig, ax = plt.subplots()
     sns.barplot(x=state_counts.values, y=state_counts.index, palette='magma', ax=ax)
