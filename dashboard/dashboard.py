@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-# Path relatif untuk file CSV
 file_path = os.path.join(os.path.dirname(__file__), "all_data.csv")
 
 # Load Data
@@ -25,6 +24,11 @@ data = load_data(file_path)
 st.sidebar.title("Dashboard")
 st.sidebar.image("https://cubic.id/public/front/images/jurnals/eZqeYWHjdJBp7DfAnCneMAh5h5B6F75s4dRS0iUL.jpeg")
 
+# Select product category
+if not data.empty:
+    unique_categories = data['product_category_name_english'].dropna().unique().tolist()
+    selected_category = st.sidebar.selectbox("Select Product Category", ["All"] + unique_categories)
+
 # Date input dengan pengecekan data
 if not data.empty:
     min_date = data['order_date'].min().date()
@@ -41,8 +45,11 @@ if not data.empty:
 
     data_filtered = data[(data['order_date'] >= start_date) & (data['order_date'] <= end_date)]
 
+    if selected_category != "All":
+        data_filtered = data_filtered[data_filtered['product_category_name_english'] == selected_category]
+
     if data_filtered.empty:
-        st.warning("No data available for the selected date range.")
+        st.warning("No data available for the selected date range and category.")
 else:
     st.stop()
 
@@ -95,37 +102,18 @@ with tab1:
 # Top Products Tab
 with tab2:
     st.header("Top Products")
-
-    # Select Category Filter
-    selected_category = st.selectbox(
-        "Select Product Category",
-        options=data_filtered['product_category_name_english'].unique(),
-        index=0
-    )
-
-    # Filter data berdasarkan kategori yang dipilih
-    filtered_data = data_filtered[data_filtered['product_category_name_english'] == selected_category]
-
-    # Update visualisasi Top Products
-    st.subheader(f"Sales Data for {selected_category}")
-
-    category_sales = filtered_data.groupby('order_date_month')['order_id'].count().reset_index()
-    fig, ax = plt.subplots()
-    sns.lineplot(x='order_date_month', y='order_id', data=category_sales, marker='o', ax=ax)
-    ax.set_title(f"Sales Trend for {selected_category}")
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
+    sum_order_items = create_sum_order_items_df(data_filtered)
 
     col1, col2 = st.columns(2)
     with col1:
-        top_products = create_sum_order_items_df(data_filtered).head(10)
+        top_products = sum_order_items.head(10)
         fig, ax = plt.subplots()
         sns.barplot(x=top_products['quantity'], y=top_products['product_category_name_english'], palette='Greens_r', ax=ax)
         ax.set_title("Top 10 Product Categories")
         st.pyplot(fig)
 
     with col2:
-        least_products = create_sum_order_items_df(data_filtered).tail(10)
+        least_products = sum_order_items.tail(10)
         fig, ax = plt.subplots()
         sns.barplot(x=least_products['quantity'], y=least_products['product_category_name_english'], palette='Reds_r', ax=ax)
         ax.set_title("Bottom 10 Product Categories")
